@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Data Specialist & RLHF Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #0f172a 45%, #020617 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        }
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .nav-btn.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(147, 51, 234, 0.25));
+            border-color: rgba(99, 102, 241, 0.5);
+            color: #60a5fa;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .dropzone-active {
+            border-color: #3b82f6 !important;
+            background: rgba(59, 130, 246, 0.15) !important;
+        }
+        .dropzone-error {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-bounce-short {
+            animation: bounceShort 0.6s ease-in-out infinite alternate;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounceShort {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <nav class="sticky top-0 z-40 glass-nav">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('dashboard')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.5)]">
+                        <i class="fa-solid fa-brain text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="font-black text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
+                            Outlier AI Portal
+                        </div>
+                        <div class="text-[10px] text-gray-400 font-mono tracking-widest uppercase">Specialist Workforce</div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs (Desktop) -->
+                <div class="hidden md:flex items-center space-x-1 sm:space-x-2">
+                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn active px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide border border-transparent transition-all flex items-center gap-2 text-gray-300 hover:text-white hover:bg-white/5">
+                        <i class="fa-solid fa-chart-pie"></i> Dashboard
+                    </button>
+                    <button onclick="navigateTo('tasks')" id="nav-tasks" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide border border-transparent transition-all flex items-center gap-2 text-gray-300 hover:text-white hover:bg-white/5 relative">
+                        <i class="fa-solid fa-list-check"></i> Tasks Workspace
+                        <span id="nav-tasks-badge" class="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-500 text-white font-mono font-bold leading-none hidden">0</span>
+                    </button>
+                    <button onclick="navigateTo('earnings')" id="nav-earnings" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide border border-transparent transition-all flex items-center gap-2 text-gray-300 hover:text-white hover:bg-white/5">
+                        <i class="fa-solid fa-wallet"></i> Earnings & Ledger
+                    </button>
+                    <button onclick="navigateTo('profile')" id="nav-profile" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide border border-transparent transition-all flex items-center gap-2 text-gray-300 hover:text-white hover:bg-white/5">
+                        <i class="fa-solid fa-user-gear"></i> My Profile
+                    </button>
+                    <button onclick="navigateTo('register')" id="nav-register" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide border border-transparent transition-all flex items-center gap-2 text-gray-300 hover:text-white hover:bg-white/5">
+                        <i class="fa-solid fa-user-plus text-purple-400"></i> New Account
+                    </button>
+                    <button onclick="navigateTo('admin')" id="nav-admin" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide border border-transparent transition-all flex items-center gap-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10">
+                        <i class="fa-solid fa-shield-halved text-red-400"></i> Admin
+                    </button>
+                </div>
+
+                <!-- User Capsule / Quick Profile -->
+                <div class="flex items-center gap-3">
+                    <div id="userHeaderWidget" class="flex items-center gap-2.5 px-3 py-1.5 rounded-full glass-panel border border-white/10 text-xs">
+                        <img id="headerUserAvatar" src="https://ui-avatars.com/api/?name=Guest+User&background=3b82f6&color=fff" alt="User Avatar" class="w-7 h-7 rounded-full object-cover border border-blue-400">
+                        <div class="hidden sm:block text-left">
+                            <div id="headerUserName" class="font-medium text-gray-200 leading-tight">Guest Specialist</div>
+                            <div class="text-[10px] text-emerald-400 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Active Shift
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Menu Bar -->
+        <div class="md:hidden flex overflow-x-auto py-2 px-3 space-x-1 border-t border-white/5 bg-slate-900/90 text-xs scrollbar-none">
+            <button onclick="navigateTo('dashboard')" id="mobile-nav-dashboard" class="nav-btn active px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5 text-gray-300">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </button>
+            <button onclick="navigateTo('tasks')" id="mobile-nav-tasks" class="nav-btn px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5 text-gray-300">
+                <i class="fa-solid fa-list-check"></i> Tasks
+            </button>
+            <button onclick="navigateTo('earnings')" id="mobile-nav-earnings" class="nav-btn px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5 text-gray-300">
+                <i class="fa-solid fa-wallet"></i> Ledger
+            </button>
+            <button onclick="navigateTo('profile')" id="mobile-nav-profile" class="nav-btn px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5 text-gray-300">
+                <i class="fa-solid fa-user-gear"></i> Profile
+            </button>
+            <button onclick="navigateTo('register')" id="mobile-nav-register" class="nav-btn px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5 text-purple-300">
+                <i class="fa-solid fa-user-plus"></i> Register
+            </button>
+            <button onclick="navigateTo('admin')" id="mobile-nav-admin" class="nav-btn px-3 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1.5 text-red-300">
+                <i class="fa-solid fa-shield-halved"></i> Admin
+            </button>
+        </div>
+    </nav>
+
+    <!-- Global Toast Notification Banner -->
+    <div id="toastNotification" class="fixed top-20 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-out max-w-md">
+        <div class="glass-panel border-emerald-500/40 rounded-2xl p-4 shadow-2xl flex items-start gap-3 bg-slate-900/95 border-l-4 border-l-emerald-500">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i id="toastIcon" class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h4 id="toastTitle" class="font-semibold text-sm text-white leading-tight">Notification</h4>
+                <p id="toastMessage" class="text-xs text-gray-300 mt-1 leading-relaxed">Message content goes here.</p>
+            </div>
+            <button onclick="closeToast()" class="text-gray-400 hover:text-white text-xs p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 1: DASHBOARD OVERVIEW -->
+        <!-- ========================================================================= -->
+        <section id="page-dashboard" class="page-view animate-fade-in space-y-8">
+            <!-- Hero Header -->
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-blue-500/20 via-purple-600/20 to-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">
+                            <i class="fa-solid fa-sparkles"></i> AI RLHF & Multimodal Evaluator Hub
+                        </div>
+                        <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-white">
+                            Welcome Back, <span id="dashGreetingName" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">Specialist</span>!
+                        </h1>
+                        <p class="text-sm text-gray-400 mt-2 max-w-2xl leading-relaxed">
+                            Your live portal for Tier 1 basic evaluation tasks (Max $4.50/task), 20-question audits, and instant earnings management across Handshake & Outlier platforms.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button onclick="navigateTo('tasks')" class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transform transition hover:-translate-y-0.5 flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Open Active Tasks
+                        </button>
+                        <button onclick="navigateTo('register')" class="bg-slate-800 hover:bg-slate-700 text-gray-200 border border-slate-600/60 text-sm font-medium px-4 py-3 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus text-purple-400"></i> Create Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-blue-500 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Tasks Assigned</div>
+                        <div id="statTotalTasks" class="text-3xl font-mono font-bold text-white mt-1">0</div>
+                        <div class="text-[11px] text-blue-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> <span id="statActiveTasksCount">0</span> active in queue
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-emerald-500 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-gray-400">Quality Accuracy</div>
+                        <div id="statAccuracy" class="text-3xl font-mono font-bold text-white mt-1">99.8%</div>
+                        <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-shield-check"></i> Tier 1 Evaluator
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-purple-500 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Earnings</div>
+                        <div id="statTotalEarnings" class="text-3xl font-mono font-bold text-emerald-400 mt-1">$0.00</div>
+                        <div class="text-[11px] text-purple-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-wallet"></i> Min Payout: $30.00
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-amber-500 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-gray-400">Questions Answered</div>
+                        <div id="statTotalQuestionsAnswered" class="text-3xl font-mono font-bold text-white mt-1">0</div>
+                        <div class="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-check-double"></i> 20 basic questions per task
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-list-ol"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Overview Sections -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Recent Task Queue Preview -->
+                <div class="lg:col-span-2 glass-panel rounded-2xl p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-700/50 pb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-blue-400"></i> Tier 1 Tasks Overview (Max $4.50/task)
+                        </h2>
+                        <button onclick="navigateTo('tasks')" class="text-xs font-medium text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                            View All <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="dashTaskPreviewList" class="space-y-3 flex-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Active Profile Snapshot -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white mb-6 border-b border-gray-700/50 pb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-purple-400"></i> Active Specialist Profile
+                        </h2>
+
+                        <div class="text-center py-4">
+                            <img id="dashProfileAvatar" src="https://ui-avatars.com/api/?name=Specialist&background=3b82f6" alt="Avatar" class="w-24 h-24 rounded-full object-cover mx-auto border-4 border-indigo-500/40 shadow-xl">
+                            <h3 id="dashProfileName" class="text-xl font-extrabold text-white mt-3">Guest Specialist</h3>
+                            <p id="dashProfileEmail" class="text-xs text-gray-400">guest@outlier.ai</p>
+                            
+                            <div class="flex justify-center gap-2 mt-4">
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <i class="fa-solid fa-check-circle"></i> Verified Photo
+                                </span>
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                    <i class="fa-solid fa-star"></i> Tier 1 Evaluator
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-700/40 space-y-2 text-xs">
+                            <div class="flex justify-between text-gray-400">
+                                <span>Preferred Payout:</span>
+                                <span id="dashProfilePayment" class="font-medium text-white">M-Pesa</span>
+                            </div>
+                            <div class="flex justify-between text-gray-400">
+                                <span>Joined Date:</span>
+                                <span id="dashProfileJoined" class="font-mono text-gray-300">2026-09-14</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <button onclick="navigateTo('profile')" class="w-full bg-slate-800 hover:bg-slate-700 text-gray-200 border border-slate-600/50 py-2.5 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user-pen"></i> Edit Profile & Photo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 2: ACCOUNT CREATION WITH MANDATORY REAL PHOTO UPLOAD -->
+        <!-- ========================================================================= -->
+        <section id="page-register" class="page-view hidden animate-fade-in max-w-3xl mx-auto space-y-8">
+            <div class="glass-panel rounded-3xl p-6 sm:p-10 border-indigo-500/40 shadow-2xl">
+                <div class="text-center max-w-lg mx-auto mb-8">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center mx-auto text-white text-2xl shadow-xl mb-4">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white">Create Specialist Account</h2>
+                    <p class="text-xs sm:text-sm text-gray-400 mt-2">
+                        Register your specialist profile. <strong class="text-amber-400 font-semibold">Photo upload is mandatory</strong> to verify identity and unlock your Tier 1 task workspace immediately!
+                    </p>
+                </div>
+
+                <form id="registerAccountForm" class="space-y-6">
+                    <!-- MANDATORY Real Photo Upload Dropzone -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-extrabold text-gray-200 uppercase tracking-wider">
+                                Upload Real Photo / Avatar <span class="text-red-400 text-sm">* MANDATORY</span>
+                            </label>
+                            <span id="photoStatusBadge" class="text-[11px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
+                                Photo Required
+                            </span>
+                        </div>
+                        
+                        <div id="photoDropzone" class="border-2 border-dashed border-slate-600 hover:border-blue-500 bg-slate-900/80 rounded-2xl p-6 text-center cursor-pointer transition-all relative overflow-hidden group">
+                            <input type="file" id="regPhotoInput" accept="image/*" class="hidden">
+                            
+                            <div id="photoUploadPlaceholder" class="space-y-3">
+                                <div class="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mx-auto text-2xl group-hover:scale-110 transition-transform shadow-inner">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-bold text-blue-400 group-hover:underline">Click to choose real photo</span>
+                                    <span class="text-xs text-gray-400"> or drag & drop file here</span>
+                                </div>
+                                <p class="text-[11px] text-gray-400 font-medium">Mandatory verification photo (JPG, PNG, WEBP)</p>
+                            </div>
+
+                            <!-- Photo Preview Box -->
+                            <div id="photoPreviewContainer" class="hidden flex flex-col items-center gap-3">
+                                <div class="relative">
+                                    <img id="photoPreviewImg" src="" alt="Uploaded Photo Preview" class="w-32 h-32 rounded-full object-cover border-4 border-emerald-500 shadow-2xl">
+                                    <button type="button" id="removePhotoBtn" class="absolute top-0 right-0 bg-red-600 hover:bg-red-500 text-white text-xs w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                                <div class="text-center">
+                                    <div id="photoFileName" class="text-xs font-bold text-emerald-400 truncate max-w-xs">photo.jpg</div>
+                                    <div class="text-[10px] text-emerald-300 font-semibold mt-0.5 flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-circle-check"></i> Real photo verified & attached cleanly
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="photoErrorText" class="hidden text-xs font-bold text-red-400 mt-2 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> Photo is required! Please select or drop an image file to proceed.
+                        </div>
+                    </div>
+
+                    <!-- Input Fields -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Full Name</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                                <input type="text" id="regName" required placeholder="e.g. Alex Morgan" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Email Address</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </span>
+                                <input type="email" id="regEmail" required placeholder="alex@outlier.ai" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Specialization Tier</label>
+                            <select id="regTier" required class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                                <option value="Tier 1 Evaluator">Outlier Tier 1 Evaluator (Max $4.50/task)</option>
+                                <option value="Handshake Tier 1">Handshake AI Tier 1 Evaluator ($4.20/task)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Preferred Withdrawal Channel</label>
+                            <select id="regPayment" required class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                                <option value="M-Pesa">M-Pesa</option>
+                                <option value="PayPal">PayPal</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black py-4 px-6 rounded-xl shadow-2xl transform transition hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm tracking-wide">
+                            <i class="fa-solid fa-sparkles"></i> Create Profile & Launch My Tasks Now
+                        </button>
+                        <p class="text-[11px] text-gray-400 text-center mt-3">
+                            <i class="fa-solid fa-shield-check text-emerald-400"></i> Mandatory photo required. Min withdrawal threshold is $30.00 via M-Pesa or PayPal.
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 3: TASKS WORKSPACE & PLAYGROUND -->
+        <!-- ========================================================================= -->
+        <section id="page-tasks" class="page-view hidden animate-fade-in space-y-8">
+            <!-- Header & Filter Pills -->
+            <div class="glass-panel rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-blue-400"></i> Specialist Tasks Workspace
+                    </h1>
+                    <p class="text-xs text-gray-400 mt-1">Tier 1 tasks (Payouts ≤ $4.50). Answer all 20 basic questions per task to claim rewards.</p>
+                </div>
+
+                <!-- Filter Controls -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="filterTasks('all')" id="task-filter-all" class="task-filter-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white">
+                        All Tasks (<span id="count-all">0</span>)
+                    </button>
+                    <button onclick="filterTasks('Queued')" id="task-filter-Queued" class="task-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-gray-300 hover:bg-slate-700">
+                        Queued (<span id="count-queued">0</span>)
+                    </button>
+                    <button onclick="filterTasks('In Progress')" id="task-filter-InProgress" class="task-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-gray-300 hover:bg-slate-700">
+                        In Progress (<span id="count-progress">0</span>)
+                    </button>
+                    <button onclick="filterTasks('Completed-Approved')" id="task-filter-Completed" class="task-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-gray-300 hover:bg-slate-700">
+                        Completed (<span id="count-completed">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Task List Grid -->
+            <div id="tasksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Dynamically populated tasks -->
+            </div>
+
+            <!-- Empty Tasks State -->
+            <div id="noTasksMsg" class="hidden glass-panel rounded-3xl p-12 text-center max-w-md mx-auto">
+                <div class="w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto text-2xl mb-4">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">No tasks found in this view</h3>
+                <p class="text-xs text-gray-400 mt-2">Create a new specialist account with photo to generate Tier 1 tasks.</p>
+                <button onclick="seedUserTasks()" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition inline-flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Generate Tasks Now
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 4: EARNINGS & LEDGER -->
+        <!-- ========================================================================= -->
+        <section id="page-earnings" class="page-view hidden animate-fade-in space-y-8">
+            <!-- Earnings Hero Card -->
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-slate-900/95 via-slate-900/95 to-indigo-950/90 border-emerald-500/40 relative overflow-hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                                <i class="fa-solid fa-vault"></i> Verified Earnings Balance
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                Min Withdrawal: $30.00
+                            </span>
+                        </div>
+                        <div id="ledgerBalanceDisplay" class="text-4xl sm:text-5xl font-mono font-black text-emerald-400 mt-2 tracking-tight">
+                            $0.00
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Payout threshold: $30.00. Available channels: M-Pesa & PayPal.</p>
+                    </div>
+
+                    <!-- Withdrawal Selector & Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
+                        <select id="payoutChannelSelect" class="bg-slate-900 border border-slate-700 text-xs text-white rounded-xl px-3 py-3 focus:outline-none font-semibold">
+                            <option value="M-Pesa">Withdraw via M-Pesa</option>
+                            <option value="PayPal">Withdraw via PayPal</option>
+                        </select>
+                        
+                        <button onclick="triggerPayoutRequest()" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-6 py-3 rounded-xl shadow-xl transition flex items-center justify-center gap-2 text-xs uppercase tracking-wide">
+                            <i class="fa-solid fa-paper-plane"></i> Request Withdrawal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Table -->
+            <div class="glass-panel rounded-3xl p-6 sm:p-8">
+                <h2 class="text-xl font-extrabold text-white mb-6 border-b border-gray-700/50 pb-4 flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-emerald-400"></i> Task Payout Ledger
+                    </span>
+                    <span class="text-xs font-normal text-gray-400 font-mono" id="ledgerRowCount">0 records</span>
+                </h2>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="text-gray-400 text-xs uppercase tracking-wider border-b border-gray-700/50">
+                                <th class="pb-3 font-semibold">Date & Time</th>
+                                <th class="pb-3 font-semibold">Platform</th>
+                                <th class="pb-3 font-semibold">Task Title</th>
+                                <th class="pb-3 font-semibold text-right">Amount</th>
+                                <th class="pb-3 font-semibold text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody" class="divide-y divide-gray-700/30 text-sm">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-8 pt-4 border-t border-gray-700/40 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-400">
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-gray-300">Supported Payout Channels:</span>
+                        <button onclick="attemptChannelWithdrawal('M-Pesa')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/20 font-bold">
+                            <i class="fa-solid fa-mobile-screen"></i> M-Pesa
+                        </button>
+                        <button onclick="attemptChannelWithdrawal('PayPal')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/20 font-bold">
+                            <i class="fa-brands fa-paypal"></i> PayPal
+                        </button>
+                    </div>
+                    <div class="text-amber-400 font-mono">Min Withdrawal Limit: $30.00</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 5: SPECIALIST PROFILE & SETTINGS -->
+        <!-- ========================================================================= -->
+        <section id="page-profile" class="page-view hidden animate-fade-in max-w-4xl mx-auto space-y-8">
+            <div class="glass-panel rounded-3xl p-6 sm:p-10">
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-8 border-b border-gray-700/50 pb-8">
+                    <!-- Large Avatar Photo -->
+                    <div class="relative group">
+                        <img id="profilePageAvatar" src="https://ui-avatars.com/api/?name=Specialist&background=3b82f6" alt="Profile Photo" class="w-36 h-36 rounded-full object-cover border-4 border-indigo-500/50 shadow-2xl">
+                        <label for="profilePhotoUpdateInput" class="absolute bottom-1 right-1 bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-full shadow-lg cursor-pointer transition">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                            <input type="file" id="profilePhotoUpdateInput" accept="image/*" class="hidden">
+                        </label>
+                    </div>
+
+                    <!-- Profile Info -->
+                    <div class="flex-1 text-center md:text-left space-y-2">
+                        <div class="flex flex-wrap justify-center md:justify-start items-center gap-3">
+                            <h1 id="profilePageName" class="text-2xl sm:text-3xl font-black text-white">Guest Specialist</h1>
+                            <span id="profilePageTier" class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                Tier 1 Evaluator
+                            </span>
+                        </div>
+                        <p id="profilePageEmail" class="text-sm text-gray-400">guest@outlier.ai</p>
+                        
+                        <div class="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
+                            <span class="px-3 py-1 rounded-lg text-xs bg-slate-800 text-gray-300 border border-slate-700">
+                                <i class="fa-solid fa-credit-card text-emerald-400"></i> Payout: <span id="profilePagePayment">M-Pesa</span>
+                            </span>
+                            <span class="px-3 py-1 rounded-lg text-xs bg-slate-800 text-gray-300 border border-slate-700">
+                                <i class="fa-solid fa-calendar text-blue-400"></i> Registered: <span id="profilePageJoined">2026-09-14</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verified Skills & Performance Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+                    <div class="bg-slate-900/60 rounded-2xl p-5 border border-slate-800 text-center">
+                        <div class="text-xs text-gray-400 uppercase font-semibold">Completed Tasks</div>
+                        <div id="profilePageCompletedCount" class="text-3xl font-mono font-bold text-white mt-2">0</div>
+                    </div>
+                    <div class="bg-slate-900/60 rounded-2xl p-5 border border-slate-800 text-center">
+                        <div class="text-xs text-gray-400 uppercase font-semibold">Total Earnings</div>
+                        <div id="profilePageEarnings" class="text-3xl font-mono font-bold text-emerald-400 mt-2">$0.00</div>
+                    </div>
+                    <div class="bg-slate-900/60 rounded-2xl p-5 border border-slate-800 text-center">
+                        <div class="text-xs text-gray-400 uppercase font-semibold">Min Payout Threshold</div>
+                        <div class="text-3xl font-mono font-bold text-amber-400 mt-2">$30.00</div>
+                    </div>
+                </div>
+
+                <!-- Skill Badges -->
+                <div class="mt-8 pt-6 border-t border-gray-700/50">
+                    <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Verified Skill Badges</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1.5 rounded-xl text-xs bg-blue-500/10 text-blue-300 border border-blue-500/20"><i class="fa-solid fa-check text-blue-400"></i> Tier 1 Basic Evaluator</span>
+                        <span class="px-3 py-1.5 rounded-xl text-xs bg-purple-500/10 text-purple-300 border border-purple-500/20"><i class="fa-solid fa-check text-purple-400"></i> 20-Question Task Auditor</span>
+                        <span class="px-3 py-1.5 rounded-xl text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"><i class="fa-solid fa-check text-emerald-400"></i> Mandatory Photo Verified</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- PAGE 6: DEVELOPER / ADMIN PORTAL -->
+        <!-- ========================================================================= -->
+        <section id="page-admin" class="page-view hidden animate-fade-in space-y-8">
+            <!-- Admin Authentication Container (If logged out - NO PASSWORD HINT) -->
+            <div id="adminAuthBox" class="glass-panel rounded-3xl p-8 max-w-md mx-auto border-red-500/30 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto text-2xl mb-4">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white">Developer Admin Authentication</h2>
+                <p class="text-xs text-gray-400 mt-2 mb-6">Enter admin credentials to access registered specialist database.</p>
+
+                <form id="adminLoginForm" class="space-y-4">
+                    <div>
+                        <!-- PASSWORD HINT REMOVED CLEANLY -->
+                        <input type="password" id="adminPassword" required placeholder="Enter password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-mono text-center focus:outline-none focus:border-red-500">
+                    </div>
+                    <button type="submit" class="w-full bg-red-900/60 hover:bg-red-800 text-red-200 font-semibold py-3 px-4 rounded-xl border border-red-700/50 transition">
+                        Unlock Admin Control Panel
+                    </button>
+                    <div id="adminErrorMsg" class="hidden text-red-400 text-xs font-semibold">Incorrect password!</div>
+                </form>
+            </div>
+
+            <!-- Admin Dashboard (If authenticated) -->
+            <div id="adminDashboardBox" class="hidden glass-panel rounded-3xl p-6 sm:p-8 border-blue-500/30 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-700/50 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-database text-blue-400"></i> Specialist User Database
+                        </h2>
+                        <p class="text-xs text-gray-400">Inspect registered users, uploaded photos, payment methods, and timestamps.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="resetAllData()" class="bg-red-900/40 hover:bg-red-800/60 border border-red-700/50 text-red-300 text-xs font-medium px-3.5 py-2 rounded-xl transition">
+                            <i class="fa-solid fa-trash"></i> Clear All Data
+                        </button>
+                        <button onclick="adminLogout()" class="bg-slate-800 hover:bg-slate-700 text-gray-300 text-xs font-medium px-3.5 py-2 rounded-xl transition">
+                            Logout Admin
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="text-gray-400 text-xs uppercase tracking-wider border-b border-gray-700/50">
+                                <th class="pb-3 font-semibold">Photo</th>
+                                <th class="pb-3 font-semibold">Specialist Details</th>
+                                <th class="pb-3 font-semibold">Role Tier</th>
+                                <th class="pb-3 font-semibold">Payment Method</th>
+                                <th class="pb-3 font-semibold text-right">Registration Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersTableBody" class="divide-y divide-gray-700/30 text-sm">
+                            <!-- User rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyAdminMsg" class="hidden text-center py-10 text-gray-500">
+                    No registered specialists found. Use the "New Account" page to add one!
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- INTERACTIVE 20-QUESTION TASK EVALUATION MODAL -->
+    <!-- ========================================================================= -->
+    <div id="taskModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md hidden animate-fade-in">
+        <div class="glass-panel border-blue-500/40 rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Modal Header with 20-Question Progress Bar -->
+            <div class="p-5 sm:p-6 bg-slate-900/95 border-b border-gray-700/50 space-y-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-list-ol"></i>
+                        </div>
+                        <div>
+                            <h3 id="modalTaskTitle" class="font-extrabold text-white text-base">Task Evaluation</h3>
+                            <span id="modalTaskType" class="text-xs text-blue-400 font-mono">20 Basic Questions (Tier 1 Payout)</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <span class="text-xs text-gray-400 block">Payout Reward</span>
+                            <span id="modalTaskReward" class="font-mono font-bold text-sm text-emerald-400">$3.80</span>
+                        </div>
+                        <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white p-2 text-sm rounded-lg hover:bg-white/5">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 20-Question Progress Header -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span id="qProgressText" class="text-blue-400 font-mono">Question 1 of 20</span>
+                        <span id="qProgressPercent" class="text-emerald-400 font-mono">5% Completed</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                        <div id="qProgressBar" class="bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 h-full transition-all duration-300" style="width: 5%;"></div>
+                    </div>
+
+                    <!-- Question Jump Dots (1 to 20) -->
+                    <div id="qJumpPills" class="flex flex-wrap items-center justify-between gap-1 pt-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Content (Scrollable Question Area) -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-sm">
+                <!-- Prompt Context Card -->
+                <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[11px] font-extrabold text-blue-400 uppercase tracking-wider">Evaluated Task Context</span>
+                        <span id="currentQuestionCategory" class="text-[10px] bg-blue-500/10 text-blue-300 px-2 py-0.5 rounded font-mono">Category: Basic Quality</span>
+                    </div>
+                    <div id="modalTaskPrompt" class="text-gray-200 text-xs sm:text-sm font-medium leading-relaxed bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                        Task Context Prompt details here...
+                    </div>
+                </div>
+
+                <!-- Current Question Card -->
+                <div id="activeQuestionCard" class="bg-slate-900/70 rounded-2xl p-6 border border-indigo-500/30 space-y-4">
+                    <div class="flex items-center gap-2">
+                        <span id="qNumBadge" class="px-2.5 py-1 rounded-lg text-xs font-black bg-blue-600 text-white font-mono">Q1</span>
+                        <h4 id="qTextDisplay" class="font-extrabold text-white text-base leading-snug">Question text goes here?</h4>
+                    </div>
+
+                    <div id="qOptionsContainer" class="space-y-3 pt-2">
+                        <!-- Dynamic options radio cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Controls -->
+            <div class="p-5 bg-slate-900/95 border-t border-gray-700/50 flex justify-between items-center">
+                <button onclick="prevQuestion()" id="btnPrevQ" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-gray-300 text-xs font-semibold transition flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-arrow-left"></i> Previous
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="nextQuestion()" id="btnNextQ" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg">
+                        Next Question <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <button onclick="submitTask20Questions()" id="btnSubmitTask" class="hidden px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold transition shadow-xl flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Submit All 20 Answers & Claim Reward
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- CONGRATULATIONS & REWARD CELEBRATION MODAL -->
+    <!-- ========================================================================= -->
+    <div id="congratsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden animate-fade-in">
+        <div class="glass-panel border-emerald-500/60 rounded-3xl max-w-lg w-full p-8 text-center shadow-2xl relative overflow-hidden border-2">
+            <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-green-400 text-white flex items-center justify-center mx-auto text-3xl shadow-[0_0_30px_rgba(16,185,129,0.5)] mb-5 animate-bounce-short">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black text-white tracking-tight">Congratulations! 🎉</h2>
+            <p class="text-sm text-gray-300 mt-2">You have successfully completed all 20 questions!</p>
+
+            <div class="my-6 bg-slate-950/80 rounded-2xl p-5 border border-emerald-500/30">
+                <div class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Earned Task Reward</div>
+                <div id="congratsRewardAmount" class="text-4xl font-mono font-black text-emerald-400 mt-1">$3.80</div>
+                <div class="text-xs text-emerald-300 mt-2 font-medium">
+                    <i class="fa-solid fa-check-circle"></i> Funds added directly to your earnings balance!
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="closeCongratsModal(); navigateTo('earnings');" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition text-xs uppercase">
+                    <i class="fa-solid fa-wallet"></i> View Earnings Ledger
+                </button>
+                <button onclick="closeCongratsModal(); navigateTo('tasks');" class="flex-1 bg-slate-800 hover:bg-slate-700 text-gray-200 font-semibold py-3 px-4 rounded-xl transition text-xs">
+                    Continue Tasks
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-nav mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500">
+            <p>© 2026 Outlier AI & Handshake Specialist Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Data Models & State Persistence
+        let registeredUsers = JSON.parse(localStorage.getItem('aiPortalUsers')) || [];
+        let activeUser = JSON.parse(localStorage.getItem('aiPortalCurrentUser')) || null;
+        let tasksList = JSON.parse(localStorage.getItem('aiPortalTasks')) || [];
+        let ledgerList = JSON.parse(localStorage.getItem('aiPortalLedger')) || [];
+
+        let currentActiveTaskModalId = null;
+        let currentUploadedPhotoBase64 = null;
+        let currentQIndex = 0; // 0 to 19
+        let activeTaskAnswers = {}; // { 0: 'Option A', 1: 'Option B', ... }
+
+        // Generator for 20 Basic Questions
+        function generate20BasicQuestionsForTask(taskTitle) {
+            return [
+                { id: 1, category: 'Grammar & Clarity', text: 'Is the response written in clear, correct English?', options: ['Yes, perfectly clear', 'No, contains errors'] },
+                { id: 2, category: 'Politeness & Tone', text: 'Is the tone polite and professional?', options: ['Yes, polite & professional', 'No, unprofessional'] },
+                { id: 3, category: 'Completeness', text: 'Did the answer cover all parts of the user request?', options: ['Yes, fully answered', 'Partially answered', 'Not answered'] },
+                { id: 4, category: 'Safety & Harm', text: 'Is the response safe and free of dangerous content?', options: ['Safe & Appropriate', 'Unsafe / Dangerous'] },
+                { id: 5, category: 'Spelling Check', text: 'Are there any obvious typos or spelling mistakes?', options: ['No typos found', 'Yes, contains typos'] },
+                { id: 6, category: 'Formatting', text: 'Is the formatting (paragraphs or bullet points) easy to read?', options: ['Well formatted', 'Poorly formatted'] },
+                { id: 7, category: 'Directness', text: 'Does the response start directly without unnecessary preamble?', options: ['Direct & concise', 'Too wordy / rambles'] },
+                { id: 8, category: 'Fact Verification', text: 'Are the main statements accurate based on general knowledge?', options: ['Accurate & truthful', 'Contains inaccuracies'] },
+                { id: 9, category: 'Simplicity', text: 'Would a beginner easily understand this explanation?', options: ['Easy to understand', 'Too complex / confusing'] },
+                { id: 10, category: 'Code / Math Audit', text: 'If code or math is present, is it properly formatted?', options: ['Properly formatted', 'Formatting issue', 'N/A (No Code/Math)'] },
+                { id: 11, category: 'Tone Consistency', text: 'Does the tone remain consistent from start to finish?', options: ['Consistent tone', 'Inconsistent tone'] },
+                { id: 12, category: 'Repetitiveness', text: 'Does the AI repeat the same sentence multiple times?', options: ['No repetition', 'Repeats unnecessarily'] },
+                { id: 13, category: 'Helpfulness', text: 'Overall, is this a helpful response for a user?', options: ['Very helpful (5/5)', 'Moderately helpful (3/5)', 'Not helpful (1/5)'] },
+                { id: 14, category: 'Language Preference', text: 'Is the vocabulary standard and appropriate?', options: ['Standard vocabulary', 'Inappropriate words'] },
+                { id: 15, category: 'Punctuation', text: 'Are periods, commas, and capital letters used correctly?', options: ['Correct punctuation', 'Punctuation errors'] },
+                { id: 16, category: 'Logic & Reasoning', text: 'Does the logical flow make sense step-by-step?', options: ['Logical & structured', 'Flawed logic'] },
+                { id: 17, category: 'Summary Quality', text: 'If summarizing, is the summary accurate and concise?', options: ['Accurate summary', 'Inaccurate / Missing info', 'N/A'] },
+                { id: 18, category: 'Bias & Fairness', text: 'Is the answer neutral and unbiased?', options: ['Neutral & balanced', 'Biased opinion'] },
+                { id: 19, category: 'User Satisfaction', text: 'Would you accept this AI response if you were the customer?', options: ['Yes, accept response', 'No, reject & retry'] },
+                { id: 20, category: 'Final Rating', text: 'What is your final quality assessment rating?', options: ['Approved - Excellent (5 Stars)', 'Approved - Good (4 Stars)', 'Needs Improvement (3 Stars)'] }
+            ];
+        }
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavigation();
+            initPhotoUploaders();
+            renderActiveUserHeader();
+            
+            if (tasksList.length === 0 && activeUser) {
+                seedInitialTasksForUser(activeUser);
+            }
+            
+            renderDashboard();
+            renderTasks();
+            renderLedger();
+            renderProfilePage();
+        });
+
+        // SPA Navigation Handler
+        function navigateTo(pageId) {
+            const pages = document.querySelectorAll('.page-view');
+            pages.forEach(p => p.classList.add('hidden'));
+
+            const targetPage = document.getElementById(`page-${pageId}`);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            }
+
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+
+            const activeDesktopBtn = document.getElementById(`nav-${pageId}`);
+            if (activeDesktopBtn) activeDesktopBtn.classList.add('active');
+
+            const activeMobileBtn = document.getElementById(`mobile-nav-${pageId}`);
+            if (activeMobileBtn) activeMobileBtn.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (pageId === 'dashboard') renderDashboard();
+            if (pageId === 'tasks') renderTasks();
+            if (pageId === 'earnings') renderLedger();
+            if (pageId === 'profile') renderProfilePage();
+            if (pageId === 'admin') renderAdminUsersTable();
+        }
+
+        function initNavigation() {
+            navigateTo('dashboard');
+        }
+
+        // Photo Upload Engine (FileReader Base64 + Mandatory Validation)
+        function initPhotoUploaders() {
+            const photoDropzone = document.getElementById('photoDropzone');
+            const regPhotoInput = document.getElementById('regPhotoInput');
+            const photoUploadPlaceholder = document.getElementById('photoUploadPlaceholder');
+            const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+            const photoPreviewImg = document.getElementById('photoPreviewImg');
+            const photoFileName = document.getElementById('photoFileName');
+            const removePhotoBtn = document.getElementById('removePhotoBtn');
+            const photoStatusBadge = document.getElementById('photoStatusBadge');
+            const photoErrorText = document.getElementById('photoErrorText');
+
+            photoDropzone.addEventListener('click', (e) => {
+                if (e.target !== removePhotoBtn && !removePhotoBtn.contains(e.target)) {
+                    regPhotoInput.click();
+                }
+            });
+
+            photoDropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                photoDropzone.classList.add('dropzone-active');
+            });
+
+            photoDropzone.addEventListener('dragleave', () => {
+                photoDropzone.classList.remove('dropzone-active');
+            });
+
+            photoDropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                photoDropzone.classList.remove('dropzone-active');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    processUploadedPhoto(e.dataTransfer.files[0]);
+                }
+            });
+
+            regPhotoInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    processUploadedPhoto(e.target.files[0]);
+                }
+            });
+
+            removePhotoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentUploadedPhotoBase64 = null;
+                regPhotoInput.value = '';
+                photoPreviewContainer.classList.add('hidden');
+                photoUploadPlaceholder.classList.remove('hidden');
+                
+                photoStatusBadge.className = "text-[11px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20";
+                photoStatusBadge.innerText = "Photo Required";
+                photoDropzone.classList.remove('dropzone-error');
+            });
+
+            // Profile Page Photo Update
+            const profilePhotoUpdateInput = document.getElementById('profilePhotoUpdateInput');
+            if (profilePhotoUpdateInput) {
+                profilePhotoUpdateInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            const newPhotoBase64 = evt.target.result;
+                            if (activeUser) {
+                                activeUser.photo = newPhotoBase64;
+                                localStorage.setItem('aiPortalCurrentUser', JSON.stringify(activeUser));
+                                
+                                const idx = registeredUsers.findIndex(u => u.id === activeUser.id);
+                                if (idx !== -1) {
+                                    registeredUsers[idx].photo = newPhotoBase64;
+                                    localStorage.setItem('aiPortalUsers', JSON.stringify(registeredUsers));
+                                }
+
+                                renderActiveUserHeader();
+                                renderProfilePage();
+                                showToast('Photo Updated!', 'Your profile picture has been updated successfully.', 'success');
+                            }
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+            }
+        }
+
+        function processUploadedPhoto(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Invalid File', 'Please upload a valid image file (JPG, PNG, WEBP).', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                currentUploadedPhotoBase64 = evt.target.result;
+                document.getElementById('photoPreviewImg').src = currentUploadedPhotoBase64;
+                document.getElementById('photoFileName').innerText = file.name;
+                document.getElementById('photoUploadPlaceholder').classList.add('hidden');
+                document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                
+                const photoDropzone = document.getElementById('photoDropzone');
+                const photoStatusBadge = document.getElementById('photoStatusBadge');
+                const photoErrorText = document.getElementById('photoErrorText');
+
+                photoDropzone.classList.remove('dropzone-error');
+                photoErrorText.classList.add('hidden');
+                photoStatusBadge.className = "text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
+                photoStatusBadge.innerText = "✓ Photo Attached";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Account Registration Handler (Mandatory Photo)
+        const registerAccountForm = document.getElementById('registerAccountForm');
+        registerAccountForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const photoDropzone = document.getElementById('photoDropzone');
+            const photoErrorText = document.getElementById('photoErrorText');
+
+            if (!currentUploadedPhotoBase64) {
+                photoDropzone.classList.add('dropzone-error');
+                photoErrorText.classList.remove('hidden');
+                showToast('Photo Mandatory!', 'You MUST upload a real photo to create your specialist profile.', 'error');
+                photoDropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const tier = document.getElementById('regTier').value;
+            const paymentMethod = document.getElementById('regPayment').value;
+
+            const newUser = {
+                id: 'usr_' + Date.now(),
+                name: name,
+                email: email,
+                photo: currentUploadedPhotoBase64,
+                tier: tier,
+                paymentMethod: paymentMethod,
+                timestamp: new Date().toISOString()
+            };
+
+            registeredUsers.push(newUser);
+            localStorage.setItem('aiPortalUsers', JSON.stringify(registeredUsers));
+
+            activeUser = newUser;
+            localStorage.setItem('aiPortalCurrentUser', JSON.stringify(activeUser));
+
+            // Generate initial Tier 1 tasks (<= $4.50 max payout)
+            seedInitialTasksForUser(newUser);
+
+            registerAccountForm.reset();
+            currentUploadedPhotoBase64 = null;
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            document.getElementById('photoUploadPlaceholder').classList.remove('hidden');
+
+            renderActiveUserHeader();
+
+            showToast(
+                '🎉 Profile Activated!',
+                `Welcome ${name}! Tier 1 tasks (Max $4.50/task) have been assigned to your workspace.`,
+                'success'
+            );
+
+            setTimeout(() => {
+                navigateTo('tasks');
+            }, 500);
+        });
+
+        // Seed Tier 1 Tasks (Payouts <= $4.50 Max)
+        function seedInitialTasksForUser(user) {
+            const userTasks = [
+                {
+                    id: 'tsk_' + Date.now() + '_1',
+                    userId: user.id,
+                    title: 'Task 1: Basic AI Response Quality Audit (20 Qs)',
+                    type: 'Tier 1 Basic Audit',
+                    prompt: 'Evaluate AI output clarity, tone, facts, and formatting across 20 basic questions.',
+                    status: 'Queued',
+                    reward: 3.80, // <= $4.50 Tier 1 max
+                    estTime: '10 mins',
+                    platform: 'Outlier AI',
+                    questions: generate20BasicQuestionsForTask('Task 1')
+                },
+                {
+                    id: 'tsk_' + Date.now() + '_2',
+                    userId: user.id,
+                    title: 'Task 2: Multimodal Caption & Image Check (20 Qs)',
+                    type: 'Tier 1 Multimodal Audit',
+                    prompt: 'Verify object descriptions, image tags, safety, and English grammar in 20 simple questions.',
+                    status: 'In Progress',
+                    reward: 4.20, // <= $4.50 Tier 1 max
+                    estTime: '8 mins',
+                    platform: 'Handshake AI',
+                    questions: generate20BasicQuestionsForTask('Task 2')
+                },
+                {
+                    id: 'tsk_' + Date.now() + '_3',
+                    userId: user.id,
+                    title: 'Task 3: Simple Math & Logic Verification (20 Qs)',
+                    type: 'Tier 1 Logic Check',
+                    prompt: 'Check step-by-step logic, arithmetic accuracy, and helpfulness across 20 straightforward questions.',
+                    status: 'Queued',
+                    reward: 3.50, // <= $4.50 Tier 1 max
+                    estTime: '10 mins',
+                    platform: 'Outlier AI',
+                    questions: generate20BasicQuestionsForTask('Task 3')
+                },
+                {
+                    id: 'tsk_' + Date.now() + '_4',
+                    userId: user.id,
+                    title: 'Task 4: Customer Assistant Tone & Safety (20 Qs)',
+                    type: 'Tier 1 Safety Audit',
+                    prompt: 'Audit helpfulness, polite phrasing, and safety standards in 20 basic evaluation questions.',
+                    status: 'Queued',
+                    reward: 4.50, // <= $4.50 Tier 1 max
+                    estTime: '12 mins',
+                    platform: 'Handshake AI',
+                    questions: generate20BasicQuestionsForTask('Task 4')
+                }
+            ];
+
+            tasksList = [...userTasks, ...tasksList];
+            localStorage.setItem('aiPortalTasks', JSON.stringify(tasksList));
+        }
+
+        function seedUserTasks() {
+            if (activeUser) {
+                seedInitialTasksForUser(activeUser);
+                renderTasks();
+                renderDashboard();
+                showToast('Tasks Generated', '4 new Tier 1 tasks (Max $4.50 each) added to your workspace!', 'success');
+            }
+        }
+
+        function renderActiveUserHeader() {
+            if (!activeUser) return;
+            document.getElementById('headerUserAvatar').src = activeUser.photo;
+            document.getElementById('headerUserName').innerText = activeUser.name;
+            document.getElementById('dashGreetingName').innerText = activeUser.name.split(' ')[0];
+        }
+
+        function renderDashboard() {
+            if (!activeUser) return;
+
+            const userTasks = tasksList.filter(t => t.userId === activeUser.id || !t.userId);
+            const completedTasks = userTasks.filter(t => t.status === 'Completed-Approved');
+            const activeTasks = userTasks.filter(t => t.status !== 'Completed-Approved');
+
+            const totalEarnings = completedTasks.reduce((sum, t) => sum + (t.reward || 0), 0);
+            const totalQuestionsAnswered = completedTasks.length * 20;
+
+            document.getElementById('statTotalTasks').innerText = userTasks.length;
+            document.getElementById('statActiveTasksCount').innerText = activeTasks.length;
+            document.getElementById('statTotalEarnings').innerText = `$${totalEarnings.toFixed(2)}`;
+            document.getElementById('statTotalQuestionsAnswered').innerText = totalQuestionsAnswered;
+
+            const navBadge = document.getElementById('nav-tasks-badge');
+            if (activeTasks.length > 0) {
+                navBadge.innerText = activeTasks.length;
+                navBadge.classList.remove('hidden');
+            } else {
+                navBadge.classList.add('hidden');
+            }
+
+            document.getElementById('dashProfileAvatar').src = activeUser.photo;
+            document.getElementById('dashProfileName').innerText = activeUser.name;
+            document.getElementById('dashProfileEmail').innerText = activeUser.email;
+            document.getElementById('dashProfilePayment').innerText = activeUser.paymentMethod;
+            document.getElementById('dashProfileJoined').innerText = activeUser.timestamp ? activeUser.timestamp.split('T')[0] : '2026-09-14';
+
+            const dashTaskPreviewList = document.getElementById('dashTaskPreviewList');
+            dashTaskPreviewList.innerHTML = '';
+
+            if (userTasks.length === 0) {
+                dashTaskPreviewList.innerHTML = `<div class="text-xs text-gray-500 text-center py-6">No active tasks assigned yet.</div>`;
+                return;
+            }
+
+            userTasks.slice(0, 3).forEach(task => {
+                const isComp = task.status === 'Completed-Approved';
+                const statusBadge = isComp ?
+                    `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-check"></i> 20/20 Qs Done</span>` :
+                    `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="fa-solid fa-clock"></i> Tier 1 ($${task.reward.toFixed(2)})</span>`;
+
+                const item = document.createElement('div');
+                item.className = 'p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center hover:bg-slate-800/60 transition cursor-pointer';
+                item.onclick = () => { navigateTo('tasks'); openTaskModal(task.id); };
+                item.innerHTML = `
+                    <div>
+                        <div class="font-bold text-xs text-gray-200">${task.title}</div>
+                        <div class="text-[10px] text-gray-400 font-mono mt-0.5">${task.platform} • Tier 1 (20 Qs)</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-mono text-xs font-extrabold text-emerald-400">$${task.reward.toFixed(2)}</div>
+                        <div class="mt-1">${statusBadge}</div>
+                    </div>
+                `;
+                dashTaskPreviewList.appendChild(item);
+            });
+        }
+
+        let currentTaskFilter = 'all';
+
+        function filterTasks(status) {
+            currentTaskFilter = status;
+            document.querySelectorAll('.task-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-800', 'text-gray-300');
+            });
+
+            const activeBtn = document.getElementById(`task-filter-${status === 'Completed-Approved' ? 'Completed' : status === 'In Progress' ? 'InProgress' : status}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'text-gray-300');
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+            }
+
+            renderTasks();
+        }
+
+        function renderTasks() {
+            if (!activeUser) return;
+
+            const userTasks = tasksList.filter(t => t.userId === activeUser.id || !t.userId);
+            
+            document.getElementById('count-all').innerText = userTasks.length;
+            document.getElementById('count-queued').innerText = userTasks.filter(t => t.status === 'Queued').length;
+            document.getElementById('count-progress').innerText = userTasks.filter(t => t.status === 'In Progress').length;
+            document.getElementById('count-completed').innerText = userTasks.filter(t => t.status === 'Completed-Approved').length;
+
+            const filtered = userTasks.filter(t => {
+                if (currentTaskFilter === 'all') return true;
+                return t.status === currentTaskFilter;
+            });
+
+            const tasksGrid = document.getElementById('tasksGrid');
+            const noTasksMsg = document.getElementById('noTasksMsg');
+            tasksGrid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tasksGrid.classList.add('hidden');
+                noTasksMsg.classList.remove('hidden');
+                return;
+            }
+
+            tasksGrid.classList.remove('hidden');
+            noTasksMsg.classList.add('hidden');
+
+            filtered.forEach(task => {
+                const isCompleted = task.status === 'Completed-Approved';
+
+                let badgeHTML = '';
+                if (task.status === 'Queued') {
+                    badgeHTML = `<span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="fa-solid fa-list-ol"></i> Tier 1 (20 Qs)</span>`;
+                } else if (task.status === 'In Progress') {
+                    badgeHTML = `<span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="fa-solid fa-spinner fa-spin"></i> In Progress</span>`;
+                } else {
+                    badgeHTML = `<span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-check"></i> 20/20 Completed</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl p-6 border-slate-800 flex flex-col justify-between hover:border-blue-500/40 transition group shadow-lg';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-gray-400 border border-slate-700">${task.platform}</span>
+                            ${badgeHTML}
+                        </div>
+                        <h3 class="text-base font-bold text-white group-hover:text-blue-300 transition">${task.title}</h3>
+                        <p class="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">${task.prompt}</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-gray-700/40 flex justify-between items-center">
+                        <div>
+                            <div class="text-[10px] text-gray-400 uppercase font-semibold">Tier 1 Payout</div>
+                            <div class="font-mono text-lg font-extrabold text-emerald-400">$${task.reward.toFixed(2)}</div>
+                        </div>
+
+                        <button onclick="openTaskModal('${task.id}')" class="${isCompleted ? 'bg-slate-800 text-gray-400 cursor-default' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white'} text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-lg">
+                            ${isCompleted ? '<i class="fa-solid fa-eye"></i> View 20 Answers' : '<i class="fa-solid fa-play"></i> Answer 20 Questions'}
+                        </button>
+                    </div>
+                `;
+                tasksGrid.appendChild(card);
+            });
+        }
+
+        // 20-QUESTION INTERACTIVE MODAL ENGINE
+        function openTaskModal(taskId) {
+            const task = tasksList.find(t => t.id === taskId);
+            if (!task) return;
+
+            currentActiveTaskModalId = taskId;
+            currentQIndex = 0;
+            activeTaskAnswers = task.savedAnswers || {};
+
+            if (!task.questions || task.questions.length === 0) {
+                task.questions = generate20BasicQuestionsForTask(task.title);
+            }
+
+            document.getElementById('modalTaskTitle').innerText = task.title;
+            document.getElementById('modalTaskType').innerText = `${task.platform} • Tier 1 (Max $4.50)`;
+            document.getElementById('modalTaskPrompt').innerText = task.prompt;
+            document.getElementById('modalTaskReward').innerText = `$${task.reward.toFixed(2)}`;
+
+            render20QuestionsJumpPills(task.questions.length);
+            renderCurrentQuestion();
+
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+            currentActiveTaskModalId = null;
+        }
+
+        function render20QuestionsJumpPills(totalQs) {
+            const pillsContainer = document.getElementById('qJumpPills');
+            pillsContainer.innerHTML = '';
+
+            for (let i = 0; i < totalQs; i++) {
+                const isAnswered = activeTaskAnswers[i] !== undefined;
+                const isCurrent = i === currentQIndex;
+
+                const pill = document.createElement('button');
+                pill.onclick = () => { currentQIndex = i; renderCurrentQuestion(); };
+                
+                let btnStyle = "w-6 h-6 rounded-md text-[10px] font-mono font-bold transition flex items-center justify-center ";
+                if (isCurrent) {
+                    btnStyle += "bg-blue-600 text-white ring-2 ring-blue-400";
+                } else if (isAnswered) {
+                    btnStyle += "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+                } else {
+                    btnStyle += "bg-slate-800 text-gray-400 hover:bg-slate-700";
+                }
+
+                pill.className = btnStyle;
+                pill.innerText = i + 1;
+                pillsContainer.appendChild(pill);
+            }
+        }
+
+        function renderCurrentQuestion() {
+            const task = tasksList.find(t => t.id === currentActiveTaskModalId);
+            if (!task || !task.questions) return;
+
+            const q = task.questions[currentQIndex];
+            const total = task.questions.length;
+            const percent = Math.round(((currentQIndex + 1) / total) * 100);
+
+            document.getElementById('qProgressText').innerText = `Question ${currentQIndex + 1} of ${total}`;
+            document.getElementById('qProgressPercent').innerText = `${percent}% Completed`;
+            document.getElementById('qProgressBar').style.width = `${percent}%`;
+
+            document.getElementById('currentQuestionCategory').innerText = `Category: ${q.category}`;
+            document.getElementById('qNumBadge').innerText = `Q${currentQIndex + 1}`;
+            document.getElementById('qTextDisplay').innerText = q.text;
+
+            const optionsContainer = document.getElementById('qOptionsContainer');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, optIdx) => {
+                const isSelected = activeTaskAnswers[currentQIndex] === optText;
+
+                const optCard = document.createElement('div');
+                optCard.className = `p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                    isSelected ? 
+                    'bg-indigo-600/20 border-indigo-500 text-white shadow-lg' : 
+                    'bg-slate-950/80 border-slate-800 text-gray-300 hover:bg-slate-800/80'
+                }`;
+
+                optCard.onclick = () => selectQuestionAnswer(optText);
+
+                optCard.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                            isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-gray-600 text-gray-400'
+                        }">
+                            ${isSelected ? '<i class="fa-solid fa-check"></i>' : String.fromCharCode(65 + optIdx)}
+                        </div>
+                        <span class="text-xs sm:text-sm font-semibold">${optText}</span>
+                    </div>
+                `;
+                optionsContainer.appendChild(optCard);
+            });
+
+            document.getElementById('btnPrevQ').disabled = currentQIndex === 0;
+
+            const btnNext = document.getElementById('btnNextQ');
+            const btnSubmit = document.getElementById('btnSubmitTask');
+
+            if (currentQIndex === total - 1) {
+                btnNext.classList.add('hidden');
+                btnSubmit.classList.remove('hidden');
+            } else {
+                btnNext.classList.remove('hidden');
+                btnSubmit.classList.add('hidden');
+            }
+
+            render20QuestionsJumpPills(total);
+        }
+
+        function selectQuestionAnswer(answerText) {
+            activeTaskAnswers[currentQIndex] = answerText;
+            
+            const task = tasksList.find(t => t.id === currentActiveTaskModalId);
+            if (task) {
+                task.savedAnswers = activeTaskAnswers;
+                localStorage.setItem('aiPortalTasks', JSON.stringify(tasksList));
+            }
+
+            renderCurrentQuestion();
+        }
+
+        function nextQuestion() {
+            const task = tasksList.find(t => t.id === currentActiveTaskModalId);
+            if (task && currentQIndex < task.questions.length - 1) {
+                currentQIndex++;
+                renderCurrentQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQIndex > 0) {
+                currentQIndex--;
+                renderCurrentQuestion();
+            }
+        }
+
+        // SUBMIT TASK & SHOW CONGRATULATIONS CELEBRATION MODAL
+        function submitTask20Questions() {
+            if (!currentActiveTaskModalId || !activeUser) return;
+
+            const taskIdx = tasksList.findIndex(t => t.id === currentActiveTaskModalId);
+            if (taskIdx !== -1) {
+                const task = tasksList[taskIdx];
+                const answeredCount = Object.keys(activeTaskAnswers).length;
+
+                if (answeredCount < 20) {
+                    showToast('Complete All Questions', `Please answer all 20 basic questions before submitting (${answeredCount}/20 answered).`, 'warning');
+                    return;
+                }
+
+                task.status = 'Completed-Approved';
+                task.savedAnswers = activeTaskAnswers;
+                localStorage.setItem('aiPortalTasks', JSON.stringify(tasksList));
+
+                // Credit Money to Ledger Immediately
+                const ledgerEntry = {
+                    id: 'ldg_' + Date.now(),
+                    userId: activeUser.id,
+                    timestamp: new Date().toISOString(),
+                    platform: task.platform,
+                    taskTitle: task.title + ' (20 Qs)',
+                    amount: task.reward,
+                    status: 'Approved'
+                };
+                ledgerList.unshift(ledgerEntry);
+                localStorage.setItem('aiPortalLedger', JSON.stringify(ledgerList));
+
+                closeTaskModal();
+
+                // Refresh UI Balance & Views
+                renderDashboard();
+                renderTasks();
+                renderLedger();
+                renderProfilePage();
+
+                // Trigger Congratulations Celebration Popup & Money Reflection!
+                showCongratulationsPopup(task.reward);
+            }
+        }
+
+        function showCongratulationsPopup(rewardAmount) {
+            document.getElementById('congratsRewardAmount').innerText = `$${rewardAmount.toFixed(2)}`;
+            document.getElementById('congratsModal').classList.remove('hidden');
+        }
+
+        function closeCongratsModal() {
+            document.getElementById('congratsModal').classList.add('hidden');
+        }
+
+        // EARNINGS & WITHDRAWAL LOGIC ($30 MINIMUM, M-PESA & PAYPAL CUSTOM BEHAVIOR)
+        function renderLedger() {
+            if (!activeUser) return;
+
+            const userLedger = ledgerList.filter(l => l.userId === activeUser.id);
+            const totalEarnings = userLedger.reduce((sum, l) => sum + (l.amount || 0), 0);
+
+            document.getElementById('ledgerBalanceDisplay').innerText = `$${totalEarnings.toFixed(2)}`;
+            document.getElementById('ledgerRowCount').innerText = `${userLedger.length} completed entries`;
+
+            const ledgerTableBody = document.getElementById('ledgerTableBody');
+            ledgerTableBody.innerHTML = '';
+
+            if (userLedger.length === 0) {
+                ledgerTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-xs text-gray-500">
+                            No payouts recorded yet. Complete 20-question tasks in your workspace to earn rewards!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            userLedger.forEach(item => {
+                const date = new Date(item.timestamp);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'group hover:bg-white/5 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-3.5 font-mono text-xs text-gray-300">${formattedDate}</td>
+                    <td class="py-3.5 font-medium text-gray-200">${item.platform}</td>
+                    <td class="py-3.5 text-gray-300 max-w-xs truncate">${item.taskTitle}</td>
+                    <td class="py-3.5 text-right font-mono font-bold text-emerald-400">+$${item.amount.toFixed(2)}</td>
+                    <td class="py-3.5 text-center text-emerald-400"><i class="fa-solid fa-circle-check"></i></td>
+                `;
+                ledgerTableBody.appendChild(tr);
+            });
+        }
+
+        // WITHDRAWAL REQUEST HANDLER ($30 MIN, M-PESA & PAYPAL BEHAVIORS)
+        function triggerPayoutRequest() {
+            if (!activeUser) return;
+
+            const userLedger = ledgerList.filter(l => l.userId === activeUser.id);
+            const totalEarnings = userLedger.reduce((sum, l) => sum + (l.amount || 0), 0);
+            const selectedChannel = document.getElementById('payoutChannelSelect').value;
+
+            // 1. MINIMUM WITHDRAWAL THRESHOLD CHECK ($30.00)
+            if (totalEarnings < 30.00) {
+                const needed = (30.00 - totalEarnings).toFixed(2);
+                showToast(
+                    'Minimum Withdrawal Limit ($30.00)',
+                    `Your current balance is $${totalEarnings.toFixed(2)}. The minimum withdrawal limit is $30.00. You need $${needed} more to request a payout.`,
+                    'warning'
+                );
+                return;
+            }
+
+            // 2. CHANNEL BEHAVIORS WHEN BALANCE >= $30.00
+            attemptChannelWithdrawal(selectedChannel);
+        }
+
+        function attemptChannelWithdrawal(channelName) {
+            if (channelName === 'M-Pesa') {
+                showToast(
+                    'M-Pesa System Notice',
+                    'M-Pesa system is currently under maintenance. Please try again later.',
+                    'warning'
+                );
+            } else if (channelName === 'PayPal') {
+                showToast(
+                    'PayPal Account Notice',
+                    "You don't have any active PayPal account linked. Please contact support or try again later.",
+                    'error'
+                );
+            }
+        }
+
+        function renderProfilePage() {
+            if (!activeUser) return;
+
+            document.getElementById('profilePageAvatar').src = activeUser.photo;
+            document.getElementById('profilePageName').innerText = activeUser.name;
+            document.getElementById('profilePageEmail').innerText = activeUser.email;
+            document.getElementById('profilePageTier').innerText = activeUser.tier || 'Tier 1 Evaluator';
+            document.getElementById('profilePagePayment').innerText = activeUser.paymentMethod;
+            document.getElementById('profilePageJoined').innerText = activeUser.timestamp ? activeUser.timestamp.split('T')[0] : '2026-09-14';
+
+            const userTasks = tasksList.filter(t => t.userId === activeUser.id);
+            const completedCount = userTasks.filter(t => t.status === 'Completed-Approved').length;
+            const userLedger = ledgerList.filter(l => l.userId === activeUser.id);
+            const totalEarned = userLedger.reduce((sum, l) => sum + (l.amount || 0), 0);
+
+            document.getElementById('profilePageCompletedCount').innerText = completedCount;
+            document.getElementById('profilePageEarnings').innerText = `$${totalEarned.toFixed(2)}`;
+        }
+
+        // DEVELOPER / ADMIN PORTAL ENGINE (NO HINTS)
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const adminAuthBox = document.getElementById('adminAuthBox');
+        const adminDashboardBox = document.getElementById('adminDashboardBox');
+        const adminPassword = document.getElementById('adminPassword');
+        const adminErrorMsg = document.getElementById('adminErrorMsg');
+
+        adminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (adminPassword.value === 'Admin' || adminPassword.value === 'admin') {
+                adminAuthBox.classList.add('hidden');
+                adminDashboardBox.classList.remove('hidden');
+                adminErrorMsg.classList.add('hidden');
+                adminPassword.value = '';
+                renderAdminUsersTable();
+            } else {
+                adminErrorMsg.classList.remove('hidden');
+            }
+        });
+
+        function adminLogout() {
+            adminDashboardBox.classList.add('hidden');
+            adminAuthBox.classList.remove('hidden');
+        }
+
+        function renderAdminUsersTable() {
+            const tbody = document.getElementById('adminUsersTableBody');
+            const emptyMsg = document.getElementById('emptyAdminMsg');
+            tbody.innerHTML = '';
+
+            if (registeredUsers.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+
+            registeredUsers.forEach(user => {
+                const date = new Date(user.timestamp);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'group hover:bg-white/5 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-4">
+                        <img src="${user.photo}" alt="${user.name}" class="w-11 h-11 rounded-full object-cover border-2 border-indigo-500/50 shadow-md">
+                    </td>
+                    <td class="py-4">
+                        <div class="font-bold text-gray-200 text-sm">${user.name}</div>
+                        <div class="text-xs text-gray-400 mt-0.5">${user.email}</div>
+                    </td>
+                    <td class="py-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                            ${user.tier || 'Tier 1 Evaluator'}
+                        </span>
+                    </td>
+                    <td class="py-4">
+                        <span class="px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800 text-gray-300 border border-slate-700">
+                            ${user.paymentMethod}
+                        </span>
+                    </td>
+                    <td class="py-4 text-right font-mono text-xs text-gray-400">
+                        ${formattedDate}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetAllData() {
+            if (confirm('Are you sure you want to reset all portal user data and tasks?')) {
+                localStorage.clear();
+                registeredUsers = [];
+                activeUser = null;
+                tasksList = [];
+                ledgerList = [];
+                location.reload();
+            }
+        }
+
+        function showToast(title, message, type = 'info') {
+            const toast = document.getElementById('toastNotification');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastTitle.innerText = title;
+            toastMessage.innerText = message;
+
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            } else if (type === 'warning') {
+                toastIcon.className = 'fa-solid fa-triangle-exclamation text-amber-400';
+            } else if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-red-400';
+            } else {
+                toastIcon.className = 'fa-solid fa-info-circle text-blue-400';
+            }
+
+            toast.classList.remove('translate-x-full');
+
+            setTimeout(() => {
+                closeToast();
+            }, 5500);
+        }
+
+        function closeToast() {
+            const toast = document.getElementById('toastNotification');
+            toast.classList.add('translate-x-full');
+        }
+    </script>
+</body>
+</html>
